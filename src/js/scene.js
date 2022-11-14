@@ -9,13 +9,14 @@ import placeOgg from '../assets/cards/cardPlace.ogg';
 import placeMp3 from '../assets/cards/cardPlace.mp3';
 
 import { Table, TurnMode } from './model';
-import { CardView, StackView, OpenStackView } from './views';
+import { CardView, StackView, OpenStackView, RecordsView } from './views';
 
 
 export class MainScene extends Phaser.Scene {
     _model: Table 
     _cardViews: Array<CardView>
     _stackViews: Arrau<StackView>
+    _recordsView: RecordsView
 
     constructor () {
         super();
@@ -95,11 +96,14 @@ export class MainScene extends Phaser.Scene {
         this.changeModeBtn.setAlpha(0.5)
         this.changeModeBtn.on("pointerdown", (pointer) => {this._model.changeTurnMode();});
 
+        this._recordsView = new RecordsView(this);
         this.showRankTableBtn = this.add.image((buttonHeight + 70) * 2, buttonPanelY, 'ranking');
         this.showRankTableBtn.scale = buttonHeight / this.showRankTableBtn.height;
         this.showRankTableBtn.setOrigin(0, 1);
         this.showRankTableBtn.setInteractive();
-        this.showRankTableBtn.on("pointerdown", (pointer) => {this._model.restart();});
+        this.showRankTableBtn.on("pointerdown", (pointer) => {
+            this._recordsView.show();
+        });
     }
 
     update() {
