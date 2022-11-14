@@ -5,6 +5,9 @@ const config = {
     type: Phaser.CANVAS,
     parent: 'phaser-solitaire',  
     transparent: true,
+    dom: {
+        createContainer: true
+    },
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,

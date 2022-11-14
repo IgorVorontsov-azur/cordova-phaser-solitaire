@@ -7,6 +7,7 @@ import cardsImage from '../assets/gui/cards.png';
 import rankingImage from '../assets/gui/ranking.png';
 import placeOgg from '../assets/cards/cardPlace.ogg';
 import placeMp3 from '../assets/cards/cardPlace.mp3';
+import nameForm from '../assets/html/name-form.html';
 
 import { Table, TurnMode } from './model';
 import { CardView, StackView, OpenStackView, RecordsView } from './views';
@@ -31,6 +32,7 @@ export class MainScene extends Phaser.Scene {
         this.load.image('game-mode', cardsImage);
         this.load.image('ranking', rankingImage);
         this.load.audio('place',[placeOgg, placeMp3]); // problem on ios, use cordova plugin for audio
+        this.load.html('nameform', nameForm);
     }
 
     create () {
@@ -67,18 +69,7 @@ export class MainScene extends Phaser.Scene {
             this._model.restart()
         })
         this._model.on("win", () => {
-            var playerName = prompt("Enter your name")
-
-            var records = localStorage.getItem("records")
-            try {
-                records = JSON.parse(records) || new Map()
-            } catch (error) {
-                records = new Map()
-            }
-            records[playerName] = this._model.moves
-
-            localStorage.setItem("records", JSON.stringify(records))
-            this._recordsView.show()
+            this._showNameForm()
         })
 
         let buttonHeight = 100
@@ -123,6 +114,59 @@ export class MainScene extends Phaser.Scene {
             onUpdate: (tween) => {
                 loader.style.opacity = 1 - tween.progress
             }
+        });
+    }
+
+    _showNameForm() {
+        let { width: gameWidth, height: gameHeight } = this.sys.game.canvas;
+
+        var element = this.add.dom(gameWidth/2, gameHeight/2).createFromCache('nameform');
+        element.scale = 3
+        element.setPosition(gameWidth/2, gameHeight + element.height * 3)
+        element.addListener('click');
+
+        element.on('click', function (event) {
+    
+            if (event.target.name === 'saveRecord')
+            {
+                var inputUsername = this.getChildByName('username');
+                let playerName = inputUsername.value
+    
+                //  Have they entered anything?
+                if (playerName !== '') {
+                    //  Turn off the click events
+                    this.removeListener('click');
+
+                    var records = localStorage.getItem("records")
+                    try {
+                        records = JSON.parse(records) || new Map()
+                    } catch (error) {
+                        records = new Map()
+                    }
+                    records[playerName] = this.scene._model.moves
+        
+                    localStorage.setItem("records", JSON.stringify(records))
+                    this.scene._recordsView.show()
+    
+                    this.scene.tweens.add({
+                        targets: element,
+                        y: gameHeight + element.height * 3,
+                        duration: 100,
+                        ease: 'Power3'
+                    });
+                }
+                else
+                {
+                }
+            }
+    
+        });
+
+        this.tweens.add({
+            targets: element,
+            y: gameHeight/2,
+            duration: 100,
+            ease: 'Power3'
         });
     }
 

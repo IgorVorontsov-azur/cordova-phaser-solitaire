@@ -10,7 +10,7 @@ export class RecordsView extends Phaser.GameObjects.Container {
         let { width: gameWidth, height: gameHeight } = scene.sys.game.canvas;
 
         this.setSize(gameWidth * 0.8, gameHeight * 0.8)
-        this.setInteractive(new Phaser.Geom.Rectangle(0, 0, gameWidth, gameHeight), Phaser.Geom.Rectangle.Contains)
+        this.setInteractive()
 
         this.x = gameWidth * 0.5
         this.y = gameHeight * 0.5
