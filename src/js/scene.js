@@ -2,7 +2,9 @@ import Phaser from 'phaser';
 
 import cardsAtlasJson from '../assets/cards/cards.json';
 import cardsAtlasPng from '../assets/cards/cards.png';
-import restartImage from '../assets/cards/restart.png';
+import restartImage from '../assets/gui/restart.png';
+import cardsImage from '../assets/gui/cards.png';
+import rankingImage from '../assets/gui/ranking.png';
 import placeOgg from '../assets/cards/cardPlace.ogg';
 import placeMp3 from '../assets/cards/cardPlace.mp3';
 
@@ -25,6 +27,8 @@ export class MainScene extends Phaser.Scene {
     preload () {
         this.load.atlas('cards', cardsAtlasPng, cardsAtlasJson);
         this.load.image('restart', restartImage);
+        this.load.image('game-mode', cardsImage);
+        this.load.image('ranking', rankingImage);
         this.load.audio('place',[placeOgg, placeMp3]); // problem on ios, use cordova plugin for audio
     }
 
@@ -56,11 +60,26 @@ export class MainScene extends Phaser.Scene {
 
         this._model.restart();
 
-        this.restartBtn = this.add.image(0, this.cameras.main.height, 'restart');
-        this.restartBtn.scale = 2;
+        let buttonHeight = 100
+        let buttonPanelY = this.cameras.main.height - 30
+
+        this.restartBtn = this.add.image(0, buttonPanelY, 'restart');
+        this.restartBtn.scale = buttonHeight / this.restartBtn.height;
         this.restartBtn.setOrigin(0, 1);
         this.restartBtn.setInteractive();
         this.restartBtn.on("pointerdown", (pointer) => {this._model.restart();});
+
+        this.changeModeBtn = this.add.image(buttonHeight + 60, buttonPanelY, 'game-mode');
+        this.changeModeBtn.scale = buttonHeight / this.changeModeBtn.height;
+        this.changeModeBtn.setOrigin(0, 1);
+        this.changeModeBtn.setInteractive();
+        this.changeModeBtn.on("pointerdown", (pointer) => {this._model.restart();});
+
+        this.showRankTableBtn = this.add.image((buttonHeight + 70) * 2, buttonPanelY, 'ranking');
+        this.showRankTableBtn.scale = buttonHeight / this.showRankTableBtn.height;
+        this.showRankTableBtn.setOrigin(0, 1);
+        this.showRankTableBtn.setInteractive();
+        this.showRankTableBtn.on("pointerdown", (pointer) => {this._model.restart();});
     }
 
     update() {
