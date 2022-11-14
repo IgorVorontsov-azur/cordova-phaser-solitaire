@@ -77,6 +77,20 @@ export class MainScene extends Phaser.Scene {
 
             this._model.restart()
         })
+        this._model.on("win", () => {
+            var playerName = prompt("Enter your name")
+
+            var records = localStorage.getItem("records")
+            try {
+                records = JSON.parse(records) || new Map()
+            } catch (error) {
+                records = new Map()
+            }
+            records[playerName] = this._model.moves
+
+            localStorage.setItem("records", JSON.stringify(records))
+            this._recordsView.show()
+        })
 
         this._model.restart();
 

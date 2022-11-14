@@ -9,6 +9,11 @@ export class RecordsView extends Phaser.GameObjects.Container {
     }
 
     show() {
-        alert("Сделано ходов: " + this.scene._model._moves);
+        var records = localStorage.getItem("records");
+        if (records == null) {
+            alert("No records");
+        } else {
+            alert(records);
+        }
     }
 }
