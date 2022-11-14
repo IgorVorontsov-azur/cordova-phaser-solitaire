@@ -45,17 +45,6 @@ export class MainScene extends Phaser.Scene {
         );
         const closedStackView = this._stackViews[0];
         closedStackView.on('pointerdown', (pointer) => { this._model.switchToNextUnusedCard() });
-
-        this._cardViews.push( ... this._model.cards.map(c => new CardView(
-            c, 
-            this,
-            this._stackViews,
-            this._cardViews,
-            "cards",
-            ['spades', 'diamonds', 'clubs', 'hearts'][c.suit] + ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'][c.rank],
-            "back", 10 + c.rank * 50, 510 + c.suit*200
-            ))
-        );
     
         this._model.on("move", () => this.sound.play('place'));
         this._model.on("turnModeChanged", () => {
@@ -92,8 +81,6 @@ export class MainScene extends Phaser.Scene {
             this._recordsView.show()
         })
 
-        this._model.restart();
-
         let buttonHeight = 100
         let buttonPanelY = this.cameras.main.height - 30
 
@@ -118,6 +105,40 @@ export class MainScene extends Phaser.Scene {
         this.showRankTableBtn.on("pointerdown", (pointer) => {
             this._recordsView.show();
         });
+
+        
+        // Smooth scene transition
+        const loader = document.getElementsByClassName('app')[0]
+        this.cameras.main.alpha = 0
+        this.tweens.add({
+            targets: this.cameras.main,
+            ease: 'Linear',
+            alpha: 1,
+            duration: 500,
+            delay: 0,
+            repeat: 0,
+            onComplete: () => {
+                this._createCards()
+            },
+            onUpdate: (tween) => {
+                loader.style.opacity = 1 - tween.progress
+            }
+        });
+    }
+
+    _createCards() {
+        this._cardViews.push( ... this._model.cards.map(c => new CardView(
+            c, 
+            this,
+            this._stackViews,
+            this._cardViews,
+            "cards",
+            ['spades', 'diamonds', 'clubs', 'hearts'][c.suit] + ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'][c.rank],
+            "back", 10 + c.rank * 50, 510 + c.suit*200
+            ))
+        );
+
+        this._model.restart()
     }
 
     update() {

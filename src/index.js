@@ -13,5 +13,5 @@ async function onDeviceReady() {
     
     await start();
     
-    document.getElementsByClassName('app')[0].remove();
+    // document.getElementsByClassName('app')[0].remove();
 }
