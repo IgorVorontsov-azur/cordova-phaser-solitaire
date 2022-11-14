@@ -1,18 +1,20 @@
 import Phaser from "phaser";
-import { Card, RankValues, Stack, SuitValues } from "./model";
+import { Card } from "../model";
+import { StackView } from "./index";
+
 
 export class CardView extends Phaser.GameObjects.Container {
     _model: Card;
     _stackViews: Array<StackView>;
-    _cardViews: Array<CardView>
+    _cardViews: Array<CardView>;
     _prevTweens: Array<Phaser.Tweens.Tween>;
-    _dragging: boolean
-    _following: boolean
+    _dragging: boolean;
+    _following: boolean;
 
     _stackView: StackView;
     _prevCardView: CardView;
 
-    constructor(card: Card, scene: Phaser.Scene, stackViews:Array<StackView>, cardViews: Array<CardView>, atlas: string, face: string, back: string, x:integer = 0, y: integer = 0) {
+    constructor(card: Card, scene: Phaser.Scene, stackViews: Array<StackView>, cardViews: Array<CardView>, atlas: string, face: string, back: string, x: integer = 0, y: integer = 0) {
         super(scene);
         this.scene.add.existing(this);
         this.scene = scene;
@@ -23,12 +25,12 @@ export class CardView extends Phaser.GameObjects.Container {
         this._model = card;
         this._dragging = false;
         this._following = false;
-        this._prevCardView = null; 
+        this._prevCardView = null;
 
         this.face = this.scene.add.image(0, 0, atlas, face);
         this.back = this.scene.add.image(0, 0, atlas, back);
-        this.face.setOrigin(0.5,0.5);
-        this.back.setOrigin(0.5,0.5);
+        this.face.setOrigin(0.5, 0.5);
+        this.back.setOrigin(0.5, 0.5);
 
         this.add(this.face);
         this.add(this.back);
@@ -41,50 +43,53 @@ export class CardView extends Phaser.GameObjects.Container {
 
         this._model.on("updated", this._updateState.bind(this));
 
-        this.setInteractive(new Phaser.Geom.Rectangle(-this.face.width/2, -this.face.height/2, this.face.width, this.face.height), Phaser.Geom.Rectangle.Contains);
-        this.scene.input.setDraggable(this);    
+        this.setInteractive(new Phaser.Geom.Rectangle(-this.face.width / 2, -this.face.height / 2, this.face.width, this.face.height), Phaser.Geom.Rectangle.Contains);
+        this.scene.input.setDraggable(this);
 
         this.scene.input.on('dragstart', (pointer, gameObject) => {
-            if(gameObject != this) return;
+            if (gameObject != this)
+                return;
             this._dragstart();
         });
 
         this.scene.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-            if(gameObject != this) return;
-            this._drag(dragX, dragY);                           
+            if (gameObject != this)
+                return;
+            this._drag(dragX, dragY);
         });
 
         this.scene.input.on('dragend', (pointer, gameObject) => {
-            if(gameObject != this) return;
+            if (gameObject != this)
+                return;
             this._dragend();
         });
 
         var lastClickTime = 0;
         this.on('pointerdown', (pointer) => {
             var clickTime = this.scene.time.now;
-            if(clickTime-lastClickTime < 350) {
+            if (clickTime - lastClickTime < 350) {
                 this._doubleclick();
             }
             lastClickTime = clickTime;
-        });    
+        });
 
-       this._updateState();       
+        this._updateState();
     }
 
     get model() { return this._model; }
-   
+
 
     _updateState() {
-        if(this._model.canMove) {           
+        if (this._model.canMove) {
             this.setInteractive();
-        } else {  
+        } else {
             this.disableInteractive();
         }
-        this._stackView = this._stackViews.find(i=>i.model == this._model.stack);
+        this._stackView = this._stackViews.find(i => i.model == this._model.stack);
 
-        var prevCards = this._stackView.model.cards.filter(i => i.order < this._model.order).sort((a,b)=>-(a.order-b.order));
+        var prevCards = this._stackView.model.cards.filter(i => i.order < this._model.order).sort((a, b) => -(a.order - b.order));
         var prevCard = prevCards.length > 0 ? prevCards[0] : null;
-        this._prevCardView = this._cardViews.find(i=>i.model == prevCard);
+        this._prevCardView = this._cardViews.find(i => i.model == prevCard);
 
 
         var targetX = this._stackView.x + this._stackView.getCardXOffset(this._model.order);
@@ -95,14 +100,14 @@ export class CardView extends Phaser.GameObjects.Container {
         this._prevTweens.forEach(i => i.remove());
         this._prevTweens.length = 0;
 
-        var flightDuration = Phaser.Math.Distance.BetweenPoints(this, {x:targetX, y:targetY})/2000 * 1000;
+        var flightDuration = Phaser.Math.Distance.BetweenPoints(this, { x: targetX, y: targetY }) / 2000 * 1000;
 
         this.depth = this._model.order;
 
-        if(this.x != targetX || this.y != targetY) {
+        if (this.x != targetX || this.y != targetY) {
             this.depth = this._model.order + 100;
             this._prevTweens.push(this.scene.tweens.add({
-                targets: this, 
+                targets: this,
                 ease: 'Linear',
                 x: targetX,
                 y: targetY,
@@ -110,7 +115,7 @@ export class CardView extends Phaser.GameObjects.Container {
                 repeat: 0
             }));
             this._prevTweens.push(this.scene.tweens.add({
-                targets: this, 
+                targets: this,
                 ease: 'Linear',
                 depth: this._model.order,
                 duration: 0,
@@ -121,9 +126,9 @@ export class CardView extends Phaser.GameObjects.Container {
 
         var backScale = this._model.open ? 0 : 1;
         var faceScale = this._model.open ? 1 : 0;
-       
 
-        if(this.face.scaleX != faceScale || this.back.scaleX != backScale) {
+
+        if (this.face.scaleX != faceScale || this.back.scaleX != backScale) {
             this._prevTweens.push(this.scene.tweens.add({
                 targets: this.face,
                 ease: 'Linear',
@@ -144,15 +149,17 @@ export class CardView extends Phaser.GameObjects.Container {
 
     }
 
-    _doubleclick(){
-        if(this._dragging) this._dragend();
-        
-        for(let i = 0; i < this._prevTweens[i]; i++) {
-            if(this._prevTweens[i].isPlaying) return;
+    _doubleclick() {
+        if (this._dragging)
+            this._dragend();
+
+        for (let i = 0; i < this._prevTweens[i]; i++) {
+            if (this._prevTweens[i].isPlaying)
+                return;
         }
         var dstStacks = this._model.table.resultStacks.concat(this._model.table.workStacks);
-        for(var i = 0; i < dstStacks.length; i++) {
-            if(this._model.table.move(this._model, dstStacks[i])) {
+        for (var i = 0; i < dstStacks.length; i++) {
+            if (this._model.table.move(this._model, dstStacks[i])) {
                 return;
             }
         }
@@ -164,112 +171,49 @@ export class CardView extends Phaser.GameObjects.Container {
     }
 
     _drag(x, y) {
-        if(!this._dragging) return;
+        if (!this._dragging)
+            return;
         this.x = x;
         this.y = y;
     }
 
     _dragend() {
-        if(!this._dragging) return;
+        if (!this._dragging)
+            return;
         this._dragging = false;
         this.depth = this._model.order;
 
-        let nearestStackView = this._stackViews.sort((a,b) => Phaser.Math.Distance.BetweenPoints(a, this) - Phaser.Math.Distance.BetweenPoints(b, this))[0];
-        if(this._model.stack == nearestStackView.model) {
+        let nearestStackView = this._stackViews.sort((a, b) => Phaser.Math.Distance.BetweenPoints(a, this) - Phaser.Math.Distance.BetweenPoints(b, this))[0];
+        if (this._model.stack == nearestStackView.model) {
             this._updateState();
             return;
         }
 
         var res = this._model.table.move(this.model, nearestStackView.model);
-        if(!res) {
+        if (!res) {
             this._updateState();
         }
     }
 
     update() {
-        if(this._dragging) return;
-        for(let i = 0; i < this._prevTweens[i]; i++) {
-            if(this._prevTweens[i].isPlaying) return;
+        if (this._dragging)
+            return;
+        for (let i = 0; i < this._prevTweens[i]; i++) {
+            if (this._prevTweens[i].isPlaying)
+                return;
         }
-        if(this._prevCardView != null && (this._prevCardView._dragging || this._prevCardView._following) ) {
+        if (this._prevCardView != null && (this._prevCardView._dragging || this._prevCardView._following)) {
             this._following = true;
         } else if (this._following && !this._dragging) {
             this._updateState(); // resets following flag and move to proper position
             return;
         }
-        if(this._following) {            
+        if (this._following) {
             var targetX = this._prevCardView.x + this._stackView.getCardXOffset(1);
             var targetY = this._prevCardView.y + this._stackView.getCardYOffset(1);
             this.x = targetX;
-            this.y = targetY;            
+            this.y = targetY;
             this.depth = this._prevCardView.depth + 1;
         }
-    }
-}
-
-
-export class StackView extends Phaser.GameObjects.Container {
-    _model: Stack;
-    _cardXOffset: integer;  
-    _cardYOffset: integer;  
-
-    constructor( stack: Stack, scene: Phaser.Scene, atlas: string, back: string, cardXOffset:integer = 0, cardYOffset:integer = 0, x:integer = 0, y: integer = 0) {
-        super(scene);
-        this.scene.add.existing(this);
-        this.scene = scene;
-
-        this._model = stack;
-        this._cardXOffset = cardXOffset;
-        this._cardYOffset = cardYOffset;
-        
-        this.back = this.scene.add.image(0,0, atlas, back);
-        this.back.setOrigin(0.5,0.5);
-        this.back.alpha = 0.25;
-        this.back.depth = -1;
-        this.add(this.back);
-
-        this.setInteractive(new Phaser.Geom.Rectangle(-this.back.width/2, -this.back.height/2, this.back.width, this.back.height), Phaser.Geom.Rectangle.Contains);
-
-        this.x = x;
-        this.y = y;
-    }
-
-    get model(){
-        return this._model;
-    }
-
-    getCardYOffset(order: integer) {
-        return this._cardYOffset * order
-    }
-
-    getCardXOffset(order: integer) {
-        return 0
-    }
-}
-
-export class OpenStackView extends StackView {
-    _maxCardsCount: integer
-
-    constructor(...args) {
-        super(...args)
-
-        this._maxCardsCount = 1
-    }
-
-    set maxCardsCount(value: integer) {
-        this._maxCardsCount = value
-    }
-
-    getCardYOffset(order: integer) {
-        return 0
-    }
-
-    // order: 0..cards.length - 1
-    getCardXOffset(order: integer) {
-        var inverseOrder = this._model.cards.length - order - 1
-        var newOrder = (this._maxCardsCount - 1) - inverseOrder
-        newOrder = Math.max(0, newOrder)
-
-        return this._cardXOffset * newOrder
     }
 }
