@@ -7,6 +7,11 @@ export const SuitValues:Array<Suit> = [0,1,2,3];
 export type Rank = 0|1|2|3|4|5|6|7|8|9|10|11|12; // ACE->2..10->J->Q->K
 export const RankValues:Array<Rank> = [0,1,2,3,4,5,6,7,8,9,10,11,12];
 
+export const TurnMode = {
+    Turn1: 'turn1',
+    Turn3: 'turn3'
+}
+
 export class Card extends EventEmitter {
     _table: Table; // I am not using private fields because of garbage in the code after the compilation
     _suit: Suit;
@@ -55,6 +60,10 @@ export class Card extends EventEmitter {
         if(changed) {
             this.emit("updated", this);
         }
+    }
+
+    _refresh() {
+        this.emit("updated", this);
     }
 }
 
@@ -149,6 +158,7 @@ export class Table extends EventEmitter {
     _workStacks: Array<WorkStack>
     _resultStacks: Array<ResultStack>
     _moves: number
+    _turnMode: TurnMode
 
     get moves(): number { return this._moves; }
     get cards(): Array<Card> { return this._cards; }
@@ -171,10 +181,34 @@ export class Table extends EventEmitter {
             )
         );
 
-        this._moves = 0;     
+        this._moves = 0;
+        this._turnMode = TurnMode.Turn1    
+    }
+
+    changeTurnMode() {
+        switch (this._turnMode) {
+            case TurnMode.Turn1:
+                this._turnMode = TurnMode.Turn3
+                break;
+        
+            default:
+                this._turnMode = TurnMode.Turn1
+                break;
+        }
+
+        this.emit("turnModeChanged", this);
     }
 
     switchToNextUnusedCard(){
+        if (this._turnMode == TurnMode.Turn1) {
+            this._turn1Card()
+        } else {
+            this._turn3Cards()
+        }
+        this._incMoves();
+    }
+
+    _turn1Card() {
         if(this._closedUnusedStack.cards.length == 0){
             if(this._openUnusedStack.cards.length == 0) {
                 return;
@@ -183,7 +217,16 @@ export class Table extends EventEmitter {
         }
         var closedCards = this._closedUnusedStack.cards;
         this._openUnusedStack._add(closedCards[closedCards.length-1]);
-        this._incMoves();
+    }
+
+    _turn3Cards() {
+        this._turn1Card()
+        this._turn1Card()
+        this._turn1Card()
+
+        this._openUnusedStack.cards.slice(-6).forEach ( card => {
+            card._refresh()
+        })
     }
     
     _incMoves(){

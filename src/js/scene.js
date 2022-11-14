@@ -8,8 +8,8 @@ import rankingImage from '../assets/gui/ranking.png';
 import placeOgg from '../assets/cards/cardPlace.ogg';
 import placeMp3 from '../assets/cards/cardPlace.mp3';
 
-import { Table } from './model';
-import { CardView, StackView } from './views';
+import { Table, TurnMode } from './model';
+import { CardView, StackView, OpenStackView } from './views';
 
 
 export class MainScene extends Phaser.Scene {
@@ -35,12 +35,12 @@ export class MainScene extends Phaser.Scene {
     create () {
         this._stackViews = []
         .concat([
-            new StackView(this._model.closedUnusedStack, this, 'cards', 'back', 0, 10+70, 110),
-            new StackView(this._model.openUnusedStack, this, 'cards', 'back', 0, 10+70+150, 110),
+            new StackView(this._model.closedUnusedStack, this, 'cards', 'back', 0, 0, 10+70, 110),
+            new OpenStackView(this._model.openUnusedStack, this, 'cards', 'back', 40, 50, 10+70+150, 110),
         ]).concat(
-            this._model.resultStacks.map((v,k) => new StackView(v, this, 'cards', 'back', 0, 10+70+150*(k+3), 110))
+            this._model.resultStacks.map((v,k) => new StackView(v, this, 'cards', 'back', 0, 0, 10+70+150*(k+3), 110))
         ).concat(
-            this._model.workStacks.map((v,k) => new StackView(v, this, 'cards', 'back', 50, 10+70+150*k, 310))
+            this._model.workStacks.map((v,k) => new StackView(v, this, 'cards', 'back', 0, 50, 10+70+150*k, 310))
         );
         const closedStackView = this._stackViews[0];
         closedStackView.on('pointerdown', (pointer) => { this._model.switchToNextUnusedCard() });
@@ -57,6 +57,25 @@ export class MainScene extends Phaser.Scene {
         );
     
         this._model.on("move", () => this.sound.play('place'));
+        this._model.on("turnModeChanged", () => {
+            console.log("turnModeChanged")
+
+            switch (this._model._turnMode) {
+                case TurnMode.Turn1:
+                    this._stackViews[1].maxCardsCount = 1
+                    this.changeModeBtn.setAlpha(0.5)
+                    this.changeModeBtn.clearTint()
+                    break;
+            
+                default:
+                    this._stackViews[1].maxCardsCount = 3
+                    this.changeModeBtn.setAlpha(1)
+                    this.changeModeBtn.setTint(0xffff00)
+                    break;
+            }
+
+            this._model.restart()
+        })
 
         this._model.restart();
 
@@ -73,7 +92,8 @@ export class MainScene extends Phaser.Scene {
         this.changeModeBtn.scale = buttonHeight / this.changeModeBtn.height;
         this.changeModeBtn.setOrigin(0, 1);
         this.changeModeBtn.setInteractive();
-        this.changeModeBtn.on("pointerdown", (pointer) => {this._model.restart();});
+        this.changeModeBtn.setAlpha(0.5)
+        this.changeModeBtn.on("pointerdown", (pointer) => {this._model.changeTurnMode();});
 
         this.showRankTableBtn = this.add.image((buttonHeight + 70) * 2, buttonPanelY, 'ranking');
         this.showRankTableBtn.scale = buttonHeight / this.showRankTableBtn.height;

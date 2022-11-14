@@ -87,8 +87,8 @@ export class CardView extends Phaser.GameObjects.Container {
         this._prevCardView = this._cardViews.find(i=>i.model == prevCard);
 
 
-        var targetX = this._stackView.x; 
-        var targetY = this._stackView.y + (this._stackView.cardOffset * this._model.order);
+        var targetX = this._stackView.x + this._stackView.getCardXOffset(this._model.order);
+        var targetY = this._stackView.y + this._stackView.getCardYOffset(this._model.order);
 
         this._following = false;
 
@@ -198,8 +198,8 @@ export class CardView extends Phaser.GameObjects.Container {
             return;
         }
         if(this._following) {            
-            var targetX = this._prevCardView.x;
-            var targetY = this._prevCardView.y + this._stackView.cardOffset;
+            var targetX = this._prevCardView.x + this._stackView.getCardXOffset(1);
+            var targetY = this._prevCardView.y + this._stackView.getCardYOffset(1);
             this.x = targetX;
             this.y = targetY;            
             this.depth = this._prevCardView.depth + 1;
@@ -210,15 +210,17 @@ export class CardView extends Phaser.GameObjects.Container {
 
 export class StackView extends Phaser.GameObjects.Container {
     _model: Stack;
-    _cardOffset: integer;    
+    _cardXOffset: integer;  
+    _cardYOffset: integer;  
 
-    constructor( stack: Stack, scene: Phaser.Scene, atlas: string, back: string, cardOffset:integer = 0,  x:integer = 0, y: integer = 0) {
+    constructor( stack: Stack, scene: Phaser.Scene, atlas: string, back: string, cardXOffset:integer = 0, cardYOffset:integer = 0, x:integer = 0, y: integer = 0) {
         super(scene);
         this.scene.add.existing(this);
         this.scene = scene;
 
         this._model = stack;
-        this._cardOffset = cardOffset;
+        this._cardXOffset = cardXOffset;
+        this._cardYOffset = cardYOffset;
         
         this.back = this.scene.add.image(0,0, atlas, back);
         this.back.setOrigin(0.5,0.5);
@@ -236,7 +238,38 @@ export class StackView extends Phaser.GameObjects.Container {
         return this._model;
     }
 
-    get cardOffset() {
-        return this._cardOffset;
+    getCardYOffset(order: integer) {
+        return this._cardYOffset * order
+    }
+
+    getCardXOffset(order: integer) {
+        return 0
+    }
+}
+
+export class OpenStackView extends StackView {
+    _maxCardsCount: integer
+
+    constructor(...args) {
+        super(...args)
+
+        this._maxCardsCount = 1
+    }
+
+    set maxCardsCount(value: integer) {
+        this._maxCardsCount = value
+    }
+
+    getCardYOffset(order: integer) {
+        return 0
+    }
+
+    // order: 0..cards.length - 1
+    getCardXOffset(order: integer) {
+        var inverseOrder = this._model.cards.length - order - 1
+        var newOrder = (this._maxCardsCount - 1) - inverseOrder
+        newOrder = Math.max(0, newOrder)
+
+        return this._cardXOffset * newOrder
     }
 }
