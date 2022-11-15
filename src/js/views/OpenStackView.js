@@ -20,6 +20,10 @@ export class OpenStackView extends StackView {
 
     // order: 0..cards.length - 1
     getCardXOffset(order: integer) {
+        if (this._model.cards.length <= 3) {
+            return this._cardXOffset * order
+        }
+
         var inverseOrder = this._model.cards.length - order - 1;
         var newOrder = (this._maxCardsCount - 1) - inverseOrder;
         newOrder = Math.max(0, newOrder);

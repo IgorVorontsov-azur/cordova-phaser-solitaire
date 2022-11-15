@@ -46,7 +46,9 @@ export class Card extends EventEmitter {
     _update(value: {stack?: Stack, order?: number, open?: boolean}){
         let changed = false;
         if(value.stack != null && this._stack !== value.stack) {
+            let oldStack = this._stack
             this._stack = value.stack;
+            oldStack.emit("delCard", this)
             changed = true;
         }
         if(value.order != null && this._order !== value.order) {
@@ -143,6 +145,12 @@ class UnusedStack extends Stack {
     constructor(table: Table, open: boolean = false){
         super(table);
         this._open = open;
+
+        if (open) {
+            this.on("delCard", () => {
+                this.cards.slice(-4).forEach (card => card._refresh())
+            })
+        }
     }
     _add(card: Card) {
         card._update({stack: this, order: this.cards.length, open: this._open});
@@ -182,7 +190,7 @@ export class Table extends EventEmitter {
         );
 
         this._moves = 0;
-        this._turnMode = TurnMode.Turn1    
+        this._turnMode = TurnMode.Turn1
     }
 
     changeTurnMode() {
