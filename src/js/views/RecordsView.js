@@ -29,7 +29,7 @@ export class RecordsView extends Phaser.GameObjects.Container {
 
         try {
             var recordsString = localStorage.getItem("records");
-            records = JSON.parse(recordsString)
+            records = JSON.parse(recordsString) || {}
         } catch (error) {
         }
 
@@ -43,7 +43,7 @@ export class RecordsView extends Phaser.GameObjects.Container {
         var rect = this.scene.add.rectangle(0, 0, this.width, this.height, 0xcccccc);
         this.add(rect)
 
-        if (records.length == 0) {
+        if (Object.keys(records).length == 0) {
             this.add(this.scene.add.text(0, 0, "No records", this._textStyle).setOrigin(0.5, 0.5));
         } else {
             this.add(this.scene.add.text(0, -this.height/2 + 100, "Records", this._textStyle).setOrigin(0.5, 0.5));
